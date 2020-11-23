@@ -4,7 +4,12 @@ from pytz import timezone
 import traceback
 import schedule
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import credentials
+
 
 pst = timezone('America/Los_Angeles')
 
@@ -19,9 +24,9 @@ class Automate_reservation:
                             booking_details['month'],
                             booking_details['day'])
 
-        self.year = booking_details['year']
-        self.month = booking_details['month']
-        self.day = booking_details['day']
+        # self.year = booking_details['year']
+        # self.month = booking_details['month']
+        # self.day = booking_details['day']
         self.email = booking_details['email']
         self.password = booking_details['password']
         self.resort = booking_details['resort']
@@ -47,17 +52,27 @@ class Automate_reservation:
             print("Returning schedule.CancelJob, since we're past the date of the desired reservation.")
             return schedule.CancelJob
 
-        browser = self.new_browser_instance(test_mode=test_mode)
+        try:
+            browser = self.new_browser_instance(test_mode=test_mode)
 
-        time.sleep(5)
+            time.sleep(5)
+            print('Created a new browser')
 
-        new_browser = self.login(browser)
+            new_browser = self.login(browser)
+            print('Managed to login')
+            time.sleep(5)
+            print("Now looking for availability for date:", self.date)
+            browser = self.find_slot(new_browser)
+            print('Looked for the slot')
 
-        browser = self.find_slot(new_browser)
+            if browser:
+                print('returning canceljob')
+                return self.book_slot(browser, test_mode=test_mode)
 
-        if browser:
-            print('returning canceljob')
-            return self.book_slot(browser, test_mode=test_mode)
+        except Exception as ex:
+            print("Going to quit this browser because of exception:", ex)
+            time.sleep(5)
+            browser.quit()
 
 
     def new_browser_instance(self, test_mode=True):
@@ -66,14 +81,13 @@ class Automate_reservation:
         when not in test mode (uses less resources).
         """
 
-        options = webdriver.ChromeOptions()
 
-        if test_mode:
-            options.headless = False
-        else:
-            options.headless = True
+        chrome_options = Options()
 
-        browser = webdriver.Chrome(executable_path='/Users/tchavas/chromedriver')
+        if not test_mode:
+            chrome_options.add_argument("--headless")
+
+        browser = webdriver.Chrome(executable_path='/Users/tchavas/chromedriver', options=chrome_options)
 
         return browser
 
@@ -89,6 +103,13 @@ class Automate_reservation:
         # Log in address
         browser.get('https://account.ikonpass.com/en/login')
 
+        time.sleep(2)
+
+        # Wait until page is loaded fully
+        WebDriverWait(browser, 3).until(EC.presence_of_element_located(
+                                    (By.XPATH, '//*[@id="email"]')))
+
+
         # Enter your login details
         browser.find_element_by_xpath('//*[@id="email"]').send_keys(
                             self.email)
@@ -97,6 +118,18 @@ class Automate_reservation:
                             self.password)
 
         time.sleep(1)
+
+        # accept the cookies
+        buttons = browser.find_elements_by_class_name('cc-btn.cc-dismiss')
+        for i in range(len(buttons)-1, -1, -1):
+            buttons[i].click()
+            time.sleep(1)
+        # buttons[2].click()
+        # time.sleep(1)
+        # buttons[1].click()
+        # time.sleep(1)
+        # buttons[0].click()
+        # time.sleep(1)
 
         # Submit your login info
         browser.find_element_by_class_name('submit').click()
@@ -116,7 +149,9 @@ class Automate_reservation:
                 'https://account.ikonpass.com/en/myaccount/add-reservations/'
                     )
 
-        time.sleep(1)
+        # Wait until page is loaded fully
+        WebDriverWait(browser, 3).until(EC.presence_of_element_located(
+                                    (By.CLASS_NAME, 'sc-pAXKH')))
 
         # Input the name of the resort
         browser.find_element_by_class_name('sc-pAXKH').send_keys(self.resort)
@@ -133,6 +168,8 @@ class Automate_reservation:
                             'sc-AxjAm.jxPclZ.sc-prpXb.hoYObS'
                                             ).click()
 
+        time.sleep(1)
+
         # If the month of reservation is not the current month,
         # toggle calendar to the correct month
         month_year = self.date.strftime('%B %Y').upper()
@@ -145,24 +182,29 @@ class Automate_reservation:
 
         # The dates are stored in the format 'Thu Dec 10 2020'
         # Let's convert our desired reservation date into that format
-
         calendar_date = self.date.strftime('%a %b %d %Y')
 
         # Click on the desired calendar date
         browser.find_element_by_css_selector(
-                        "[aria-label=" + calendar_date + "]"
+                        "[aria-label=" + "\"" + calendar_date + "\"" + "]"
                                             ).click()
 
         # See if the button to reserve is there, if not, continue.
         slot_found = False
+
+
         try:
             browser.find_element_by_class_name(
                         'sc-AxjAm.jxPclZ.sc-qPNpY.fZKxnA'
                                             ).click()
             slot_found = True
 
-        except NoSuchElementException:
-            pass
+        # except NoSuchElementException:
+        except Exception:
+            print('This slot is currenty not available.')
+            browser.quit()
+            return
+
 
         if slot_found:
             return browser
@@ -195,76 +237,118 @@ class Automate_reservation:
         # scheduling that job again
         return schedule.CancelJob
 
-
-# for booking_number in credentials.booking:
-#     schedule.every(10).seconds.do(
-#                 Automate_reservation(credentials.booking[booking_number]).main,
-#                 test_mode=True
-#                               )
 for booking_number in credentials.booking:
-    Automate_reservation(credentials.booking[booking_number]).main(test_mode=True)
-#
-# while schedule.jobs:
-#     try:
-#         schedule.run_pending()
-#         time.sleep(1)
-#         print(datetime.now().astimezone(pst).strftime("%c"))
-#     except Exception as ex:
-#         print("exception caught in the scheduler loop: ", ex)
+    schedule.every(10).seconds.do(
+                Automate_reservation(credentials.booking[booking_number]).main,
+                test_mode=False
+                              )
+# for booking_number in credentials.booking:
+#     Automate_reservation(credentials.booking[booking_number]).main(test_mode=True)
 
+while schedule.jobs:
+    # try:
+    schedule.run_pending()
+    time.sleep(1)
+    print(datetime.now().astimezone(pst).strftime("%c"))
+    # except Exception as ex:
+    #     print("exception caught in the scheduler loop: ", ex)
 
-# browser = webdriver.Firefox(executable_path='/Users/tchavas/geckodriver')
-browser = webdriver.Chrome(executable_path='/Users/tchavas/chromedriver')
-# browser.get('https://account.ikonpass.com/en/myaccount/add-reservations/')
-browser.get('https://account.ikonpass.com/en/login')
-
-time.sleep(1)
-# # Fill in your details
-browser.find_element_by_xpath('//*[@id="email"]').send_keys(credentials.booking[0]['email'])
-browser.find_element_by_xpath('//*[@id="sign-in-password"]').send_keys(credentials.booking[0]['password'])
-
-time.sleep(1)
-
-# Submit your login info
-browser.find_element_by_class_name('submit').click()
-
-time.sleep(1)
+browser = Automate_reservation(credentials.booking[0]).new_browser_instance(test_mode=True)
 
 browser.get('https://account.ikonpass.com/en/myaccount/add-reservations/')
-
-time.sleep(1)
-# Input the name of the resort
-
-browser.find_element_by_class_name('sc-pAXKH').send_keys('crystal mountain')
-time.sleep(1)
-
-# Select the first choice that comes up
-browser.find_element_by_xpath('//*[@id="react-autowhatever-resort-picker-section-0-item-0"]').click()
-
-# Click continue to get to the calendar
-browser.find_element_by_class_name('sc-AxjAm.jxPclZ.sc-prpXb.hoYObS').click()
+browser = foo.login(browser)
+browser.find_element_by_css_selector("[aria-label='dismiss cookie message']").click()
+browser.find_element_by_class_name('cc-btn.cc-dismiss').click()
+foo.find_slot(browser)
+#
 
 
-# select a particular date – first have to toggle to correct month
-browser.find_element_by_css_selector("[aria-label='Wed Nov 25 2020']").click()
 
-# Check the month you're looking at
-browser.find_element_by_class_name('sc-pZMVu.hgRLdf').text
+buttons = browser.find_elements_by_class_name('cc-btn.cc-dismiss')
 
-# Click on the reservation button
-browser.find_element_by_class_name('sc-AxjAm.jxPclZ.sc-qPNpY.fZKxnA').click()
 
-# # add one month to calendar
-# browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
+import random
+counter = 0
+
+print('number of buttons:', len(buttons))
+while counter < len(buttons)-1:
+    temp = random.randint(0, len(buttons)-1)
+    print(temp)
+    try:
+        buttons[counter].click()
+        counter += 1
+        print('success!')
+    except Exception as ex:
+        print(ex)
+        continue
+
+buttons[0].click()
+
+for button in buttons[::-1]:
+    button.click()
+
+buttons[0].click()
+
+
+
+# browser.find_element_by_css_selector('[aria-label="Tue Nov 24 2020"]').click()
+#
+# calendar_date = "\"" + foo.date.strftime('%a %b %d %Y')
+# calendar_date
+# test = "[aria-label=" + calendar_date + "]"
+# test
+# # browser = webdriver.Firefox(executable_path='/Users/tchavas/geckodriver')
+# browser = webdriver.Chrome(executable_path='/Users/tchavas/chromedriver')
+# # browser.get('https://account.ikonpass.com/en/myaccount/add-reservations/')
+# browser.get('https://account.ikonpass.com/en/login')
+#
+# time.sleep(1)
+# # # Fill in your details
+# browser.find_element_by_xpath('//*[@id="email"]').send_keys(credentials.booking[0]['email'])
+# browser.find_element_by_xpath('//*[@id="sign-in-password"]').send_keys(credentials.booking[0]['password'])
+#
+# time.sleep(1)
+#
+# # Submit your login info
+# browser.find_element_by_class_name('submit').click()
+#
+# time.sleep(1)
+#
+# browser.get('https://account.ikonpass.com/en/myaccount/add-reservations/')
+#
+# time.sleep(1)
+# # Input the name of the resort
+#
+# browser.find_element_by_class_name('sc-pAXKH').send_keys('crystal mountain')
+# time.sleep(1)
+#
+# # Select the first choice that comes up
+# browser.find_element_by_xpath('//*[@id="react-autowhatever-resort-picker-section-0-item-0"]').click()
+#
+# # Click continue to get to the calendar
+# browser.find_element_by_class_name('sc-AxjAm.jxPclZ.sc-prpXb.hoYObS').click()
+#
 #
 # # select a particular date – first have to toggle to correct month
-# browser.find_element_by_css_selector("[aria-label='Thu Dec 10 2020']").click()
-
-# Click on review my reservations button
-browser.find_element_by_class_name('sc-AxjAm.jxPclZ.sc-qOubn.cugtRd').click()
-
-# Tick the checkbox
-browser.find_element_by_class_name('input').click()
-
-# Submit
-browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
+# browser.find_element_by_css_selector("[aria-label='Wed Nov 25 2020']").click()
+#
+# # Check the month you're looking at
+# browser.find_element_by_class_name('sc-pZMVu.hgRLdf').text
+#
+# # Click on the reservation button
+# browser.find_element_by_class_name('sc-AxjAm.jxPclZ.sc-qPNpY.fZKxnA').click()
+#
+# # # add one month to calendar
+# # browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
+# #
+# # # select a particular date – first have to toggle to correct month
+# # browser.find_element_by_css_selector("[aria-label='Thu Dec 10 2020']").click()
+#
+# # Click on review my reservations button
+# browser.find_element_by_class_name('sc-AxjAm.jxPclZ.sc-qOubn.cugtRd').click()
+#
+# # Tick the checkbox
+# browser.find_element_by_class_name('input').click()
+#
+# # Submit
+# browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
