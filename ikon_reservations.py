@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import credentials
+import logging
 
 
 pst = timezone('America/Los_Angeles')
@@ -23,10 +24,6 @@ class Automate_reservation:
         self.date = datetime(booking_details['year'],
                             booking_details['month'],
                             booking_details['day'])
-
-        # self.year = booking_details['year']
-        # self.month = booking_details['month']
-        # self.day = booking_details['day']
         self.email = booking_details['email']
         self.password = booking_details['password']
         self.resort = booking_details['resort']
@@ -58,18 +55,38 @@ class Automate_reservation:
             time.sleep(5)
             print('Created a new browser')
 
+            # self.login() does not need to return anything if runs successfully
+            # because browser instance gets modified
+
             new_browser = self.login(browser)
             print('Managed to login')
             time.sleep(5)
             print("Now looking for availability for date:", self.date)
             browser = self.find_slot(new_browser)
+
+            # Suggestion by Stephen:
+            # isAvailable = self.find_slot(browser, self.date)
+
             print('Looked for the slot')
+            time.sleep(2)
+            # Suggestion by Stephen:
+            # if (isAvailable)
+                # self.book_slot(browser, self.date, test_mode=test_mode)
+            # have find_slot() raise an exception if it fails instead of
+            # passing the contents to variable browser.
 
             if browser:
-                print('returning canceljob')
-                return self.book_slot(browser, test_mode=test_mode)
+                temp = self.book_slot(browser, test_mode=test_mode)
+                if temp == schedule.CancelJob:
+                    print('Cancelling this job because slot was booked!')
+                return temp
+
+            # Suggestion by stephen
+            # TODO: Move browser.quit() to outside of except statement so that
+            # you only write it once.
 
         except Exception as ex:
+            logging.exception('Exception occurred')
             print("Going to quit this browser because of exception:", ex)
             time.sleep(5)
             browser.quit()
@@ -119,17 +136,16 @@ class Automate_reservation:
 
         time.sleep(1)
 
-        # accept the cookies
+        # Deal with the banners for cookies. Turns out there are three of those
+        # superimposed on top of each other.
+
+        # TODO: Current implementation to deal with them is not ideal, will
+        # need to formalise it at some point. Currently works.
+
         buttons = browser.find_elements_by_class_name('cc-btn.cc-dismiss')
         for i in range(len(buttons)-1, -1, -1):
             buttons[i].click()
             time.sleep(1)
-        # buttons[2].click()
-        # time.sleep(1)
-        # buttons[1].click()
-        # time.sleep(1)
-        # buttons[0].click()
-        # time.sleep(1)
 
         # Submit your login info
         browser.find_element_by_class_name('submit').click()
@@ -200,11 +216,11 @@ class Automate_reservation:
             slot_found = True
 
         # except NoSuchElementException:
-        except Exception:
-            print('This slot is currenty not available.')
+        except Exception as ex:
+            print('This slot is currently not available.', ex)
             browser.quit()
             return
-
+            # raise exception
 
         if slot_found:
             return browser
@@ -217,6 +233,12 @@ class Automate_reservation:
         """
 
         # Click on review my reservations button
+        # TODO: NEED TO PUT A WAIT FOR ELEMENT TO BE CLICKABLE
+        # This shoudl work, let's see
+        WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
+                    (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd')
+                                                                ))
+
         browser.find_element_by_class_name(
                             'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd'
                                         ).click()
@@ -230,7 +252,7 @@ class Automate_reservation:
 
         if not test_mode:
             browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
-            print('Found the desired slot, for date:', self.date)
+            print('Booked the desired slot, for date:', self.date)
             browser.quit()
 
         # If we booked the desired slot we can stop the scheduler from
