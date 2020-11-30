@@ -1,4 +1,4 @@
-current_tzimport time
+import time
 from datetime import datetime, timedelta
 from pytz import timezone
 import schedule
@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import credentials
 
-
+# Change this variable to your timezone. See README for more info
 local_tz = timezone('America/Los_Angeles')
 
 
@@ -28,82 +28,70 @@ class Automate_reservation:
 
     def main(self, test_mode=True):
         """
-        Creates a new browser instance, navigates the browser through identification, checks if the desired slot (as defined in the
-        booking_details.py file) is available and if so, books it.
+        Creates a new browser instance, navigates the browser through login,
+        checks if the desired slot (as defined in the credentials.py file) is
+        available and if so, books it.
 
-        When done testing code and ready to run, toggle test_mode to False.
-        test_mode goes through the whole process but does not submit the form.
+        When done testing code and ready to run, toggle test_mode
+        to False. test_mode goes through the whole process but
+        does not submit the form.
         """
 
+        # This is the timezone defined above, which allows the scheduler to sync
+        # with the machine's internal clock.
         global local_tz
 
-        # We need to cancel this scheduled job if we're past the booking date
-        # E.g., if we're trying to book a slot for 06/26 and it's 06/27
-        # let's cancel the job. Can probably make that dependent on the exact
-        # time of booking.
-        # The server runs in UTC time so have to convert to pacific time first
-        # local_tz = timezone('America/Los_Angeles')
-
+        # The check belows tells the scheduler to cancel the job
+        # if we're past the desired reservation date.
         if datetime.now().astimezone(local_tz) > \
                     self.date.astimezone(local_tz) + timedelta(days=1):
             print("Returning schedule.CancelJob, since we're past the date of the desired reservation.")
             return schedule.CancelJob
 
+
         try:
-            browser = self.new_browser_instance(test_mode=test_mode)
-
-            time.sleep(5)
+            # Create new browser
+            browser = self.new_browser_instance(
+                                test_mode=test_mode
+                                                )
             print('Created a new browser')
+            time.sleep(5)
 
-            # self.login() does not need to return anything if runs successfully
-            # because browser instance gets modified
-
-            # new_browser = self.login(browser)
+            # Login using the credentials specified in the credentials.py file
             self.login(browser)
             print('Managed to login')
             time.sleep(5)
-            print("Now looking for availability for date:", self.date)
 
+            # find_slot() will return True if the slot is available.
+            # otherwise, it will raise an exception.
+            print("Now looking for availability for date:",
+                    self.date)
             is_available = self.find_slot(browser, self.date)
-
-            # if not is_available:
-            #     raise Exception("Slot is not available.")
-            # Suggestion by Stephen:
-            # isAvailable = self.find_slot(browser, self.date)
-
-
             time.sleep(2)
-            # Suggestion by Stephen:
-            # if (isAvailable)
-                # self.book_slot(browser, self.date, test_mode=test_mode)
-            # have find_slot() raise an exception if it fails instead of
-            # passing the contents to variable browser.
-
-            # if is_available:
-            #
 
             if is_available:
+                # book_slot() will return True if the process goes smoothly,
+                # otherwise raise an exception.
                 print('Found the slot, will now try to book it...')
-                is_booked = self.book_slot(browser, test_mode=test_mode)
+                is_booked = self.book_slot(browser,
+                                            test_mode=test_mode)
 
                 if is_booked:
                     print('Slot booked, now cancelling this job!')
                     browser.quit()
                     return schedule.CancelJob
-            # Suggestion by stephen
-            # TODO: Move browser.quit() to outside of except statement so that
-            # you only write it once.
 
         except Exception as ex:
             print("Going to quit this browser because of exception:", ex)
             time.sleep(5)
             browser.quit()
 
-
     def new_browser_instance(self, test_mode=True):
         """
-        Creates a Selenium browser instance, which is made headless
-        when not in test mode (uses less resources).
+        Creates a Selenium chrome browser instance, which is made headless
+        when not in test mode.
+        Make sure that the path to the chromedriver executable is the correct
+        one for your machine.
         """
 
         chrome_options = Options()
@@ -119,15 +107,12 @@ class Automate_reservation:
         """
         Uses a browser instance, along with the credentials (email/password)
         given in the eponymous file to identify the user with their ikon
-        account.
-        Need to check if the login has actually worked, because current
-        implementation does not throw an exception if login isn't successful.
+        account. Will raise an exception if login is unsuccessful.
         """
 
-        # Log in address
         try:
+            # Log in address
             browser.get('https://account.ikonpass.com/en/login')
-
             time.sleep(2)
 
             # Wait until page is loaded fully
@@ -144,12 +129,9 @@ class Automate_reservation:
 
             time.sleep(1)
 
-            # Deal with the banners for cookies. Turns out there are three of those
-            # superimposed on top of each other.
-
-            # TODO: Current implementation to deal with them is not ideal, will
-            # need to formalise it at some point. Currently works.
-
+            # Deal with the banners for cookies. Turns out there are three of
+            # those superimposed on top of each other, which block access to
+            # the reservation buttons.
             buttons = browser.find_elements_by_class_name('cc-btn.cc-dismiss')
             for i in range(len(buttons)-1, -1, -1):
                 buttons[i].click()
@@ -158,18 +140,27 @@ class Automate_reservation:
             # Submit your login info
             browser.find_element_by_class_name('submit').click()
 
-        except Exception:
-            raise Exception("Login did not go as planned")
+            # Check that hitting submit redirects you to
+            # "https://account.ikonpass.com/en/myaccount", indicating success.
+            # Else: raise an error.
+
+            time.sleep(1)
+            if browser.current_url != 'https://account.ikonpass.com/en/myaccount':
+                raise Exception("Invalid credentials.")
+
+        except Exception as ex:
+            raise Exception("Login failed.", ex)
 
     def find_slot(self, browser, date):
         """
-        Uses a browser instance to check if the slot of interest is available.
-        By default, has one participant in the booking.
+        Given a browser instance that has logged in successfully, will check if
+        the slot of interest is available.
         Date has to be a datetime object containg year, month and day.
-        Returns the browser once the slot has been selected.
+        Returns True if the desired slot is available, otherwise raises an
+        exception.
         """
 
-        # Once you're logged in, go to reservations page
+        # Assuming you're logged in, go to reservations page
         browser.get(
                 'https://account.ikonpass.com/en/myaccount/add-reservations/'
                     )
@@ -195,15 +186,26 @@ class Automate_reservation:
 
         time.sleep(1)
 
-        # If the month of reservation is not the current month,
-        # toggle calendar to the correct month
+        # If the reservation is not for the current month,
+        # toggle calendar to the correct one.
+
+        # First let's format the datetime object to match the website's format
         month_year = date.strftime('%B %Y').upper()
 
-        # Check what month we are looking at
+        # Check what month we are currently looking at
+        counter = 0
         while month_year != browser.find_element_by_class_name('sc-pZMVu.hgRLdf').text:
 
         # Add one month to the calendar if we're not looking at the correct one
             browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
+            counter += 1
+            # If we've gone through too many iterations, there might be an
+            # error with formatting of calendar month, so raise an exception
+            # here to avoid getting stuck in infinite loop.
+            if counter > 10:
+                raise Exception(
+                "The desired date is not available for booking yet"
+                                )
 
         # The dates are stored in the format 'Thu Dec 10 2020'
         # Let's convert our desired reservation date into that format
@@ -214,8 +216,8 @@ class Automate_reservation:
                         "[aria-label=" + "\"" + calendar_date + "\"" + "]"
                                             ).click()
 
-        # See if the button to reserve is there, if not, bubble that information
-        # back up to the main function
+        # See if the button to reserve is there.
+        # If so, return True. If not, raise an exception.
         slot_found = False
 
         try:
@@ -224,23 +226,22 @@ class Automate_reservation:
                                             ).click()
             slot_found = True
 
-        # except NoSuchElementException:
         except Exception as ex:
             raise Exception('This slot is currently not available.', ex)
-            # print(, ex)
-            # browser.quit()
 
         return slot_found
 
     def book_slot(self, browser, test_mode=True):
         """
-        This function is called only if find_slot() has found the slot
-        that the desired slot is available.
+        Given a browser instance that has been logged in and found the desired
+        slot as done using the find_slot() function, this function will book
+        said slot and return True. If it runs into an issue, it will raise
+        an exception.
+        In test_mode, the function will run through the motions but not hit
+        submit.
         """
 
-        # Click on review my reservations button
-        # TODO: NEED TO PUT A WAIT FOR ELEMENT TO BE CLICKABLE
-        # This should work, let's see
+        # Click on "Review my reservations" button once it's clickable.
         try:
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
                         (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd')
@@ -253,36 +254,26 @@ class Automate_reservation:
             # Tick the checkbox
             browser.find_element_by_class_name('input').click()
 
-            # Submit the form
-            # If in test_mode, want to leave the browser open so can inspect that
-            # everything has been done correctly.
+            # Submit the form (if not in test_mode)
+            # If in test_mode, want to leave the browser open so can inspect
+            # that everything has been done correctly.
 
             if not test_mode:
                 browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
                 print('Booked the desired slot, for date:', self.date)
 
-            # If we booked the desired slot we can stop the scheduler from
-            # scheduling that job again
-            # return schedule.CancelJob
             return True
 
         except Exception as ex:
             raise Exception("Ran into an issue booking the slot", ex)
-            return False
-
 
 for booking_number in credentials.booking:
-    schedule.every(10).seconds.do(
+    schedule.every().minute.do(
                 Automate_reservation(credentials.booking[booking_number]).main,
                 test_mode=True
                               )
-# for booking_number in credentials.booking:
-#     Automate_reservation(credentials.booking[booking_number]).main(test_mode=True)
 
 while schedule.jobs:
-    # try:
     schedule.run_pending()
     time.sleep(1)
     print(datetime.now().astimezone(local_tz).strftime("%c"))
-    # except Exception as ex:
-    #     print("exception caught in the scheduler loop: ", ex)
