@@ -1,6 +1,6 @@
 # Automating reservations for Ikon-operated ski resorts.
 
-Because of the ongoing pandemic, most ski resorts are now requiring reservations to manage crowds. Most weekend days are fully booked up months in advance, leaving weekend warriors with two options: hitting refresh every minute in the hopes of snagging one those elusive spots that open up due to cancellations, or using this script to do the work for them.
+Because of the ongoing pandemic, most ski resorts are now requiring reservations to manage crowds. Ikon-owned and operated ski hills have their weekend days fully booked up months in advance, leaving weekend warriors with two options: hitting refresh every minute in the hope of snagging an elusive spot as a result of cancellations, or using this script to do the work for them.
 
 ### Tired of hitting refresh in the hope of getting a reservation to your favourite ski resort? Use this bot! 
 
