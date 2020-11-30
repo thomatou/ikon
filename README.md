@@ -21,8 +21,7 @@ Requirements:
 
 To specify the desired reservation dates, fill in the information for every reservation desired using the `mock_credentials.py` file. Now, change the name of that file to `credentials.py`.
 
-Your Ikon account must have a free reservation day for the script to be able to make the booking. You can have the script running and looking for multiple reservations at the same time, but for the booking to actually happen, you you can't already be holding 10 reserved days, or the website won't let you make another booking. 
-
+Your Ikon account must have at least one free reservation day for the script to be able to make the booking. You can have the script running and looking for multiple reservations at the same time, but for the booking to actually happen, you you can't already be holding 10 reserved days, or the website won't let you make another booking. 
 
 Yes, this system requires you to store your password in plain text –– use at your own risk. 
 
