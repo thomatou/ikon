@@ -1,7 +1,6 @@
-import time
+current_tzimport time
 from datetime import datetime, timedelta
 from pytz import timezone
-import traceback
 import schedule
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,10 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import credentials
-import logging
 
 
-pst = timezone('America/Los_Angeles')
+local_tz = timezone('America/Los_Angeles')
 
 
 class Automate_reservation:
@@ -37,15 +35,17 @@ class Automate_reservation:
         test_mode goes through the whole process but does not submit the form.
         """
 
+        global local_tz
+
         # We need to cancel this scheduled job if we're past the booking date
         # E.g., if we're trying to book a slot for 06/26 and it's 06/27
         # let's cancel the job. Can probably make that dependent on the exact
         # time of booking.
         # The server runs in UTC time so have to convert to pacific time first
-        pst = timezone('America/Los_Angeles')
+        # local_tz = timezone('America/Los_Angeles')
 
-        if datetime.now().astimezone(pst) > self.date.astimezone(pst) + \
-                                            timedelta(days=1):
+        if datetime.now().astimezone(local_tz) > \
+                    self.date.astimezone(local_tz) + timedelta(days=1):
             print("Returning schedule.CancelJob, since we're past the date of the desired reservation.")
             return schedule.CancelJob
 
@@ -71,7 +71,7 @@ class Automate_reservation:
             # Suggestion by Stephen:
             # isAvailable = self.find_slot(browser, self.date)
 
-            print('Looked for the slot')
+
             time.sleep(2)
             # Suggestion by Stephen:
             # if (isAvailable)
@@ -83,10 +83,11 @@ class Automate_reservation:
             #
 
             if is_available:
+                print('Found the slot, will now try to book it...')
                 is_booked = self.book_slot(browser, test_mode=test_mode)
 
                 if is_booked:
-                    print('Cancelling this job because slot was booked!')
+                    print('Slot booked, now cancelling this job!')
                     browser.quit()
                     return schedule.CancelJob
             # Suggestion by stephen
@@ -282,6 +283,6 @@ while schedule.jobs:
     # try:
     schedule.run_pending()
     time.sleep(1)
-    print(datetime.now().astimezone(pst).strftime("%c"))
+    print(datetime.now().astimezone(local_tz).strftime("%c"))
     # except Exception as ex:
     #     print("exception caught in the scheduler loop: ", ex)
