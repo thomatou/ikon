@@ -1,14 +1,14 @@
-# How to get a reservation for Ikon ski resorts. 
+# Automating reservations for Ikon-operated ski resorts.
 
 Because of the ongoing pandemic, most ski resorts are now requiring reservations to manage crowds. Most weekend days are fully booked up months in advance, leaving weekend warriors with two options: hitting refresh every minute in the hopes of snagging one those elusive spots that open up due to cancellations, or using this script to do the work for them.
 
-# Tired of hitting refresh hoping to get a reservation to your favourite ski resort? Use this bot! 
+### Tired of hitting refresh in the hope of getting a reservation to your favourite ski resort? Use this bot! 
 
 Given a desired reservation date and ski resort, as well as the username and password of a particular Ikon pass holder, this script will launch a chrome web browser and look for availability on that given date. If no slots are available for that day, the browser will exit, and this process will repeat itself once every minute until the given date, or until availability for that slot is found, whichever comes first.
 
 Important note: The current implementation only works for ski resorts that are using the Ikon-operated reservations system, i.e. Arapahoe Basin, Big Sky, Brighton, The Summit at Snoqualmie, and Crystal Mountain Resort. 
 
-# Let's go! 
+### Let's go! 
 
 This python script has a few dependencies, which need to be installed to ensure smooth sailing.
 
