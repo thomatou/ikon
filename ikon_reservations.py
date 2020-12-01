@@ -84,7 +84,11 @@ class Automate_reservation:
         except Exception as ex:
             print("Going to quit this browser because of exception:", ex)
             time.sleep(5)
+
+        try:
             browser.quit()
+        except Exception:
+            pass
 
     def new_browser_instance(self, test_mode=True):
         """
@@ -99,7 +103,7 @@ class Automate_reservation:
         if not test_mode:
             chrome_options.add_argument("--headless")
 
-        browser = webdriver.Chrome(executable_path='/Users/tchavas/chromedriver', options=chrome_options)
+        browser = webdriver.Chrome(executable_path='./chromedriver', options=chrome_options)
 
         return browser
 
@@ -268,7 +272,7 @@ class Automate_reservation:
             raise Exception("Ran into an issue booking the slot", ex)
 
 for booking_number in credentials.booking:
-    schedule.every().minute.do(
+    schedule.every(10).seconds.do(
                 Automate_reservation(credentials.booking[booking_number]).main,
                 test_mode=True
                               )
