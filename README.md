@@ -6,7 +6,7 @@ Because of the ongoing pandemic, most ski resorts are now requiring reservations
 
 Given a desired reservation date and ski resort, as well as the username and password of a particular Ikon pass holder, this script will launch a chrome web browser and look for availability on that given date. If no slots are available for that day, the browser will exit, and this process will repeat itself once every minute until the given date, or until availability for that slot is found, whichever comes first.
 
-Important note: The current implementation only works for ski resorts that are using the Ikon-operated reservations system, i.e. Arapahoe Basin, Big Sky, Brighton, The Summit at Snoqualmie, and Crystal Mountain Resort. 
+Important note: The current implementation only works for ski resorts that are using the Ikon-operated reservations system, i.e. Arapahoe Basin, Big Sky, Brighton, Crystal Mountain Resort, Loon Mountain, Taos, The Summit at Snoqualmie, Windham Mountain.
 
 ### Let's go! 
 
@@ -21,7 +21,7 @@ Requirements:
 
 To specify the desired reservation dates, fill in the information for every reservation desired using the `mock_credentials.py` file. Now, change the name of that file to `credentials.py`.
 
-Your Ikon account must have at least one free reservation day for the script to be able to make the booking. You can have the script running and looking for multiple reservations at the same time, but for the booking to actually happen, you you can't already be holding 10 reserved days, or the website won't let you make another booking. 
+Your Ikon account must have at least one free reservation day for the script to be able to make the booking. You can have the script running and looking for multiple reservations at the same time, but for the booking to actually happen, you can't already be holding 10 reserved days, or the website won't let you make another booking. 
 
 Yes, this system requires you to store your password in plain text –– use at your own risk. 
 
