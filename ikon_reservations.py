@@ -37,8 +37,8 @@ class Automate_reservation:
         does not submit the form.
         """
 
-        # This is the timezone defined above, which allows the scheduler to sync
-        # with the machine's internal clock.
+        # This is the timezone defined outside of the class, which allows the
+        # scheduler to sync with the machine's internal clock.
         global local_tz
 
         # The check belows tells the scheduler to cancel the job
@@ -170,14 +170,6 @@ class Automate_reservation:
                     )
 
         # Wait until page is loaded fully
-        # WebDriverWait(browser, 3).until(EC.presence_of_element_located(
-                                    # (By.CLASS_NAME, 'sc-pAXKH')))
-
-        # Input the name of the resort
-        # browser.find_element_by_class_name('sc-pAXKH').send_keys(self.resort)
-
-
-        # Wait until page is loaded fully
         WebDriverWait(browser, 3).until(EC.presence_of_element_located(
                                     (By.CLASS_NAME, 'sc-pRStN')))
 
@@ -187,16 +179,22 @@ class Automate_reservation:
         time.sleep(1)
 
         # Select the first choice in the list that comes up
-        # browser.find_element_by_xpath(
-        # '//*[@id="react-autowhatever-resort-picker-section-0-item-0"]'
-                                    # ).click()
+        # Current implementation requires that you have self.resort
+        # selected as a favourite in your ikon account.
+
         browser.find_element_by_xpath(
         '//*[@id="react-autowhatever-resort-picker-section-1-item-0"]'
                                     ).click()
 
+        # Uncomment the next 3 lines if self.resort is not a favourite (and
+        # comment out the one above)
+
+        # browser.find_element_by_xpath(
+        # '//*[@id="react-autowhatever-resort-picker-section-0-item-0"]'
+                                    # ).click()
+
         # Click continue to get to the calendar
         browser.find_element_by_class_name(
-                            # 'sc-AxjAm.jxPclZ.sc-prpXb.hoYObS'
                                     'sc-AxjAm.jxPclZ'
                                             ).click()
 
@@ -205,12 +203,13 @@ class Automate_reservation:
         # If the reservation is not for the current month,
         # toggle calendar to the correct one.
 
-        # First let's format the datetime object to match the website's format
+        # First let's format our datetime object to match the website's format
+        # for month
+        # Website's format for month at top of calendar is "DECEMBER 2020"
         month_year = date.strftime('%B %Y').upper()
 
         # Check what month we are currently looking at
         counter = 0
-        # while month_year != browser.find_element_by_class_name('sc-pZMVu.hgRLdf').text:
 
         while month_year != browser.find_element_by_class_name('sc-pckkE.goPjwB').text:
 
@@ -225,7 +224,7 @@ class Automate_reservation:
                 "The desired date is not available for booking yet"
                                 )
 
-        # The dates are stored in the format 'Thu Dec 10 2020'
+        # The actual calendar dates are stored in the format 'Thu Dec 10 2020'
         # Let's convert our desired reservation date into that format
         calendar_date = date.strftime('%a %b %d %Y')
 
@@ -237,10 +236,10 @@ class Automate_reservation:
         # See if the button to reserve is there.
         # If so, return True. If not, raise an exception.
         slot_found = False
-        #
+        time.sleep(2)
+
         try:
             browser.find_element_by_class_name(
-                        # 'sc-AxjAm.jxPclZ.sc-qPNpY.fZKxnA'
                                     'sc-AxjAm.jxPclZ'
                                             ).click()
             slot_found = True
@@ -263,12 +262,10 @@ class Automate_reservation:
         # Click on "Review my reservations" button once it's clickable.
         try:
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                        # (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd')
                         (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ')
                                                                     ))
 
             browser.find_element_by_class_name(
-                                # 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd'
                                 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ'
                                             ).click()
 
@@ -291,7 +288,7 @@ class Automate_reservation:
 for booking_number in credentials.booking:
     schedule.every(10).seconds.do(
                 Automate_reservation(credentials.booking[booking_number]).main,
-                test_mode=False
+                test_mode=True
                               )
 
 while schedule.jobs:
