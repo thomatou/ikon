@@ -170,22 +170,34 @@ class Automate_reservation:
                     )
 
         # Wait until page is loaded fully
-        WebDriverWait(browser, 3).until(EC.presence_of_element_located(
-                                    (By.CLASS_NAME, 'sc-pAXKH')))
+        # WebDriverWait(browser, 3).until(EC.presence_of_element_located(
+                                    # (By.CLASS_NAME, 'sc-pAXKH')))
 
         # Input the name of the resort
-        browser.find_element_by_class_name('sc-pAXKH').send_keys(self.resort)
+        # browser.find_element_by_class_name('sc-pAXKH').send_keys(self.resort)
+
+
+        # Wait until page is loaded fully
+        WebDriverWait(browser, 3).until(EC.presence_of_element_located(
+                                    (By.CLASS_NAME, 'sc-pRStN')))
+
+        # Input the name of the resort
+        browser.find_element_by_class_name('sc-pRStN').send_keys(self.resort)
 
         time.sleep(1)
 
         # Select the first choice in the list that comes up
+        # browser.find_element_by_xpath(
+        # '//*[@id="react-autowhatever-resort-picker-section-0-item-0"]'
+                                    # ).click()
         browser.find_element_by_xpath(
-        '//*[@id="react-autowhatever-resort-picker-section-0-item-0"]'
+        '//*[@id="react-autowhatever-resort-picker-section-1-item-0"]'
                                     ).click()
 
         # Click continue to get to the calendar
         browser.find_element_by_class_name(
-                            'sc-AxjAm.jxPclZ.sc-prpXb.hoYObS'
+                            # 'sc-AxjAm.jxPclZ.sc-prpXb.hoYObS'
+                                    'sc-AxjAm.jxPclZ'
                                             ).click()
 
         time.sleep(1)
@@ -198,7 +210,9 @@ class Automate_reservation:
 
         # Check what month we are currently looking at
         counter = 0
-        while month_year != browser.find_element_by_class_name('sc-pZMVu.hgRLdf').text:
+        # while month_year != browser.find_element_by_class_name('sc-pZMVu.hgRLdf').text:
+
+        while month_year != browser.find_element_by_class_name('sc-pckkE.goPjwB').text:
 
         # Add one month to the calendar if we're not looking at the correct one
             browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
@@ -223,10 +237,11 @@ class Automate_reservation:
         # See if the button to reserve is there.
         # If so, return True. If not, raise an exception.
         slot_found = False
-
+        #
         try:
             browser.find_element_by_class_name(
-                        'sc-AxjAm.jxPclZ.sc-qPNpY.fZKxnA'
+                        # 'sc-AxjAm.jxPclZ.sc-qPNpY.fZKxnA'
+                                    'sc-AxjAm.jxPclZ'
                                             ).click()
             slot_found = True
 
@@ -248,11 +263,13 @@ class Automate_reservation:
         # Click on "Review my reservations" button once it's clickable.
         try:
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                        (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd')
+                        # (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd')
+                        (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ')
                                                                     ))
 
             browser.find_element_by_class_name(
-                                'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd'
+                                # 'sc-AxjAm.jxPclZ.sc-qOubn.cugtRd'
+                                'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ'
                                             ).click()
 
             # Tick the checkbox
@@ -274,7 +291,7 @@ class Automate_reservation:
 for booking_number in credentials.booking:
     schedule.every(10).seconds.do(
                 Automate_reservation(credentials.booking[booking_number]).main,
-                test_mode=True
+                test_mode=False
                               )
 
 while schedule.jobs:
