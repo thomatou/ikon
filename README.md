@@ -6,7 +6,7 @@ Because of the ongoing pandemic, most ski resorts are now requiring reservations
 
 Given a desired reservation date and ski resort, as well as the username and password of a particular Ikon pass holder, this script will launch a chrome web browser and look for availability on that given date. If no slots are available for that day, the browser will exit, and this process will repeat itself once every minute until the given date, or until availability for that slot is found, whichever comes first.
 
-Important note: The current implementation only works for ski resorts that are using the Ikon-operated reservations system, i.e. Arapahoe Basin, Big Sky, Brighton, Crystal Mountain Resort, Loon Mountain, Taos, The Summit at Snoqualmie, Windham Mountain.
+Important note: The current implementation only works for ski resorts that are using the Ikon-operated reservations system, i.e. Arapahoe Basin, Big Sky, Brighton, Crystal Mountain Resort, Loon Mountain, Taos, The Summit at Snoqualmie, and Windham Mountain.
 
 ### Let's go! 
 
@@ -16,7 +16,7 @@ Requirements:
 * Python3.x (tested with python3.7)
 * [`selenium`](https://pypi.org/project/selenium/)
 * [`schedule`](https://schedule.readthedocs.io/en/stable/)
-* [`chromedriver`](https://chromedriver.chromium.org/downloads). Make sure you specify the absolute path to your chromedriver executable file in the `ikon_reservations.py` file. On ubuntu, Install the chrome driver using the following command: `sudo apt-get install chromium-chromedriver`. Your chromedriver will then be located at the following location: `/usr/bin/chromedriver`.
+* [`chromedriver`](https://chromedriver.chromium.org/downloads). Make sure you specify the path to your chromedriver executable file in the `ikon_reservations.py` file. On Ubuntu, install the chrome driver using the following command: `sudo apt-get install chromium-chromedriver`. Your chromedriver will then be located at the following location: `/usr/bin/chromedriver`.
 * [`pytz`](https://pypi.org/project/pytz/). This is to ensure that the script runs on your timezone. The current implementation assumes that you're on LA time. If that is not the case, look up your relevant timezone [here](https://stackoverflow.com/questions/13866926/is-there-a-list-of-pytz-timezones), and pass that to the `local_tz` variable in the `ikon_reservations.py` script.
 
 To specify the desired reservation dates, fill in the information for every reservation desired using the `mock_credentials.py` file. Now, change the name of that file to `credentials.py`.
