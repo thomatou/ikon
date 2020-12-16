@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import credentials
+import send_emails
 
 # Change this variable to your timezone. See README for more info
 local_tz = timezone('America/Los_Angeles')
@@ -79,12 +80,19 @@ class Automate_reservation:
                 if is_booked:
                     print('Slot booked, now cancelling this job!')
                     browser.quit()
+                    # send_emails.email(
+                    #         'thomatou@hotmail.com',
+                    #         'Slot booked for user ' + self.email,
+                    #         'Hopefully some good skiing'
+                    #             )
                     return schedule.CancelJob
 
         except Exception as ex:
             print("Going to quit this browser because of exception:", ex)
             time.sleep(5)
 
+        # Need to check if memory allocated to variables that go out of scope
+        # are automatically cleaned up in Python
         try:
             browser.quit()
         except Exception:
@@ -239,13 +247,18 @@ class Automate_reservation:
         time.sleep(2)
 
         try:
-            browser.find_element_by_class_name(
-                                    'sc-AxjAm.jxPclZ'
-                                            ).click()
+            WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
+                            (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAArZ.lkoEyq')))
+
+            button = browser.find_element_by_class_name(
+                                'sc-AxjAm.jxPclZ.sc-pAArZ.lkoEyq'
+                                                        )
+            button.click()
             slot_found = True
 
         except Exception as ex:
             raise Exception('This slot is currently not available.', ex)
+
 
         return slot_found
 
@@ -264,14 +277,13 @@ class Automate_reservation:
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
                         (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ')
                                                                     ))
-
+                                                                    
             browser.find_element_by_class_name(
                                 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ'
                                             ).click()
 
             # Tick the checkbox
             browser.find_element_by_class_name('input').click()
-
             # Submit the form (if not in test_mode)
             # If in test_mode, want to leave the browser open so can inspect
             # that everything has been done correctly.
@@ -288,7 +300,7 @@ class Automate_reservation:
 for booking_number in credentials.booking:
     schedule.every(10).seconds.do(
                 Automate_reservation(credentials.booking[booking_number]).main,
-                test_mode=True
+                test_mode=False
                               )
 
 while schedule.jobs:
