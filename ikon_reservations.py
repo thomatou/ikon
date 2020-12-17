@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException
 import credentials
 import send_emails
 
@@ -81,10 +82,10 @@ class Automate_reservation:
                     print('Slot booked, now cancelling this job!')
                     browser.quit()
                     # send_emails.email(
-                    #         'thomatou@hotmail.com',
-                    #         'Slot booked for user ' + self.email,
-                    #         'Hopefully some good skiing'
-                    #             )
+                             # 'thomatou@hotmail.com',
+                             # 'Slot booked for user ' + self.email,
+                             # 'Hopefully some good skiing on: ' + self.date.strftime('%a %b %d %Y') + ' at ' + self.resort
+                             #     )
                     return schedule.CancelJob
 
         except Exception as ex:
@@ -256,9 +257,8 @@ class Automate_reservation:
             button.click()
             slot_found = True
 
-        except Exception as ex:
-            raise Exception('This slot is currently not available.', ex)
-
+        except TimeoutException:
+            raise Exception('This slot is currently not available.')
 
         return slot_found
 
@@ -277,7 +277,7 @@ class Automate_reservation:
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
                         (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ')
                                                                     ))
-                                                                    
+
             browser.find_element_by_class_name(
                                 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ'
                                             ).click()
