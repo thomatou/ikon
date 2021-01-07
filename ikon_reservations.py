@@ -178,12 +178,10 @@ class Automate_reservation:
                 'https://account.ikonpass.com/en/myaccount/add-reservations/'
                     )
 
-        # Wait until page is loaded fully
+        # Wait until page is loaded fully and then input the name of the resort
+        
         WebDriverWait(browser, 3).until(EC.presence_of_element_located(
-                                    (By.CLASS_NAME, 'sc-pRStN')))
-
-        # Input the name of the resort
-        browser.find_element_by_class_name('sc-pRStN').send_keys(self.resort)
+                                    (By.CLASS_NAME, 'sc-pckkE.goPjwB'))).send_keys(self.resort)
 
         time.sleep(1)
 
@@ -220,7 +218,8 @@ class Automate_reservation:
         # Check what month we are currently looking at
         counter = 0
 
-        while month_year != browser.find_element_by_class_name('sc-pckkE.goPjwB').text:
+        while month_year != browser.find_element_by_class_name('sc-qPyvj.jTgFdL').text:
+
 
         # Add one month to the calendar if we're not looking at the correct one
             browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
@@ -248,12 +247,11 @@ class Automate_reservation:
         time.sleep(2)
 
         try:
+            # This is the path to the button to reserve
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                            (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAArZ.lkoEyq')))
+                            (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qcpLw.jSQblL'))
+                                            ).click()
 
-            button = browser.find_element_by_class_name(
-                                'sc-AxjAm.jxPclZ.sc-pAArZ.lkoEyq'
-                                                        )
             button.click()
             slot_found = True
 
@@ -275,12 +273,8 @@ class Automate_reservation:
         # Click on "Review my reservations" button once it's clickable.
         try:
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                        (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ')
-                                                                    ))
-
-            browser.find_element_by_class_name(
-                                'sc-AxjAm.jxPclZ.sc-pAKSZ.dHRKUJ'
-                                            ).click()
+                        (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pbxEC.kGbbGu')
+                                                                    )).click()
 
             # Tick the checkbox
             browser.find_element_by_class_name('input').click()
