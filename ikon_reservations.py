@@ -14,6 +14,20 @@ import send_emails
 # Change this variable to your timezone. See README for more info
 local_tz = timezone('America/Los_Angeles')
 
+class correct_redirect_url(object):
+  """An expectation for checking that the redirect url is the expected one
+
+  locator - used to find the element
+  returns the WebElement once it has the particular css class
+  """
+  def __init__(self, redirect_url):
+    self.expected_redirect_url = redirect_url
+
+  def __call__(self, driver):
+    if driver.current_url != self.expected_redirect_url:
+        return False
+    else:
+        return True
 
 class Automate_reservation:
     def __init__(self, booking_details):
@@ -109,8 +123,10 @@ class Automate_reservation:
 
         chrome_options = Options()
 
-        if not test_mode:
-            chrome_options.add_argument("--headless")
+        # if not test_mode:
+        #     chrome_options.add_argument("--headless")
+            # chrome_options.add_argument("--allow-insecure-localhost")
+        # chrome_options.add_argument('--no-startup-window')
 
         browser = webdriver.Chrome(executable_path='./chromedriver', options=chrome_options)
 
@@ -156,10 +172,17 @@ class Automate_reservation:
             # Check that hitting submit redirects you to
             # "https://account.ikonpass.com/en/myaccount", indicating success.
             # Else: raise an error.
+            redirect_url = 'https://account.ikonpass.com/en/myaccount'
 
-            time.sleep(1)
-            if browser.current_url != 'https://account.ikonpass.com/en/myaccount':
-                raise Exception("Invalid credentials.")
+            try:
+                WebDriverWait(browser, 10).until(correct_redirect_url(redirect_url))
+
+            except TimeoutException as ex:
+                raise Exception("Invalid credentials; not redirecting to the right page", ex)
+            #
+            # time.sleep(2)
+            # if browser.current_url != 'https://account.ikonpass.com/en/myaccount':
+            #     raise Exception("Invalid credentials.")
 
         except Exception as ex:
             raise Exception("Login failed.", ex)
@@ -178,10 +201,16 @@ class Automate_reservation:
                 'https://account.ikonpass.com/en/myaccount/add-reservations/'
                     )
 
-        # Wait until page is loaded fully and then input the name of the resort
-        
+        # Wait until page is loaded fully and then click on the box
         WebDriverWait(browser, 3).until(EC.presence_of_element_located(
-                                    (By.CLASS_NAME, 'sc-pckkE.goPjwB'))).send_keys(self.resort)
+                                    (By.CLASS_NAME, 'sc-plWPA.gXobFM'))).click()
+
+        # browser.find_element_by_class_name('sc-plWPA.gXobFM').click()
+        # Now that the box is activated, input the name of the resort
+
+        browser.find_element_by_class_name('sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused').send_keys(self.resort)
+
+
 
         time.sleep(1)
 
@@ -189,9 +218,13 @@ class Automate_reservation:
         # Current implementation requires that you have self.resort
         # selected as a favourite in your ikon account.
 
-        browser.find_element_by_xpath(
-        '//*[@id="react-autowhatever-resort-picker-section-1-item-0"]'
-                                    ).click()
+        browser.find_element_by_class_name('react-autosuggest__suggestion.react-autosuggest__suggestion--first').click()
+
+        # browser.find_element_by_xpath(
+        # '//*[@id="react-autowhatever-resort-picker-section-1-item-0"]'
+        #                             ).click()
+
+
 
         # Uncomment the next 3 lines if self.resort is not a favourite (and
         # comment out the one above)
@@ -201,9 +234,14 @@ class Automate_reservation:
                                     # ).click()
 
         # Click continue to get to the calendar
+        # browser.find_element_by_class_name(
+        #                             'sc-AxjAm.jxPclZ'
+        #                                     ).click()
+
         browser.find_element_by_class_name(
-                                    'sc-AxjAm.jxPclZ'
+                                    'sc-AxheI.kalRZb.sc-oTbNR.jvzKsL'
                                             ).click()
+
 
         time.sleep(1)
 
@@ -218,7 +256,7 @@ class Automate_reservation:
         # Check what month we are currently looking at
         counter = 0
 
-        while month_year != browser.find_element_by_class_name('sc-qPyvj.jTgFdL').text:
+        while month_year != browser.find_element_by_class_name('sc-pAXsk.xfqye').text:
 
 
         # Add one month to the calendar if we're not looking at the correct one
@@ -248,11 +286,14 @@ class Automate_reservation:
 
         try:
             # This is the path to the button to reserve
+            # WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
+            #                 (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pDabv.cXRBvv'))
+            #                                 ).click()
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                            (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-qcpLw.jSQblL'))
+                            (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-pQGev.efemFX'))
                                             ).click()
 
-            button.click()
+
             slot_found = True
 
         except TimeoutException:
@@ -272,9 +313,15 @@ class Automate_reservation:
 
         # Click on "Review my reservations" button once it's clickable.
         try:
+            # WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
+            #             (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pReXV.fMKkMP')
+            #                                                         )).click()
+
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                        (By.CLASS_NAME, 'sc-AxjAm.jxPclZ.sc-pbxEC.kGbbGu')
+                        (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-oULiq.cGTYJk')
                                                                     )).click()
+
+
 
             # Tick the checkbox
             browser.find_element_by_class_name('input').click()
@@ -283,7 +330,8 @@ class Automate_reservation:
             # that everything has been done correctly.
 
             if not test_mode:
-                browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
+                browser.find_element_by_class_name('sc-AxheI.kalRZb').click()
+                # browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
                 print('Booked the desired slot, for date:', self.date)
 
             return True
@@ -301,3 +349,34 @@ while schedule.jobs:
     schedule.run_pending()
     time.sleep(1)
     print(datetime.now().astimezone(local_tz).strftime("%c"))
+
+#
+# browser = Automate_reservation(credentials.booking[0]).new_browser_instance(test_mode=False)
+#
+# browser.get('https://account.ikonpass.com/en/myaccount/add-reservations/')
+#
+# browser.save_screenshot('./save_screenshot_method.png')
+# browser.find_element_by_id('email').send_keys('thomatou')
+# browser.find_element_by_id('sign-in-password').send_keys('cock')
+# browser.find_element_by_class_name('submit').click()
+#
+# browser.find_element_by_css_selector('sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open')
+#
+# browser.find_element_by_css_selector('sc-plWPA.gXobFM.sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open').send_keys('cock')
+#
+# browser.find_element_by_id('react-autowhatever-resort-picker-section-0-item-1').click()
+#
+# browser.find_element_by_class_name('sc-plWPA.gXobFM').click()
+#
+# browser.find_element_by_class_name('sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused').send_keys('Crystal Mountain Resort')
+#
+#
+# browser.find_element_by_class_name('react-autosuggest__suggestion.react-autosuggest__suggestion--first').click()
+#
+#
+# browser.find_element_by_class_name('sc-AxheI.kalRZb.sc-oTbNR.jvzKsL').click()
+#
+#
+# browser.find_element_by_class_name('sc-pJuJN.bqeAWT.amp-button.plain').click()
+#
+# browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
