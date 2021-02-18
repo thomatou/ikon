@@ -214,7 +214,9 @@ class Automate_reservation:
         # Current implementation requires that you have self.resort
         # selected as a favourite in your ikon account.
 
-        browser.find_element_by_class_name('react-autosuggest__suggestion.react-autosuggest__suggestion--first').click()
+        browser.find_element_by_class_name(
+        'react-autosuggest__suggestion.react-autosuggest__suggestion--first'
+                                        ).click()
 
         # Uncomment the next 3 lines if self.resort is not a favourite (and
         # comment out the one above)
@@ -246,7 +248,8 @@ class Automate_reservation:
 
 
         # Add one month to the calendar if we're not looking at the correct one
-            browser.find_element_by_class_name('amp-icon.icon-chevron-right').click()
+            browser.find_element_by_class_name(
+                            'amp-icon.icon-chevron-right').click()
             counter += 1
             # If we've gone through too many iterations, there might be an
             # error with formatting of calendar month, so raise an exception
