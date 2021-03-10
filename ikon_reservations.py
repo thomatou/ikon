@@ -198,13 +198,21 @@ class Automate_reservation:
                     )
 
         # Wait until page is loaded fully and then click on the box
+        # WebDriverWait(browser, 3).until(EC.presence_of_element_located(
+                                    # (By.CLASS_NAME, 'sc-plWPA.gXobFM'))).click()
         WebDriverWait(browser, 3).until(EC.presence_of_element_located(
-                                    (By.CLASS_NAME, 'sc-plWPA.gXobFM'))).click()
+                                    (By.CLASS_NAME, 'sc-pLvcq.jvrmaG'))).click()
 
 
         # Now that the box is activated, input the name of the resort
 
-        browser.find_element_by_class_name('sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused').send_keys(self.resort)
+#         browser.find_element_by_class_name(
+# 'sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused'
+#                             ).send_keys(self.resort)
+
+        browser.find_element_by_class_name(
+        'sc-pTUKB.kQoWQL.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused'
+                                    ).send_keys(self.resort)
 
 
 
@@ -226,9 +234,13 @@ class Automate_reservation:
                                     # ).click()
 
         # Click continue to get to the calendar
+        # browser.find_element_by_class_name(
+        #                             'sc-AxheI.kalRZb.sc-oTbNR.jvzKsL'
+        #                                     ).click()
         browser.find_element_by_class_name(
-                                    'sc-AxheI.kalRZb.sc-oTbNR.jvzKsL'
+                                    'sc-AxheI.kalRZb.sc-qYgnM.fbVBUC'
                                             ).click()
+
 
 
         time.sleep(1)
@@ -244,7 +256,10 @@ class Automate_reservation:
         # Check what month we are currently looking at
         counter = 0
 
-        while month_year != browser.find_element_by_class_name('sc-pAXsk.xfqye').text:
+        # while month_year != browser.find_element_by_class_name('sc-pAXsk.xfqye').text:
+        while month_year != browser.find_element_by_class_name('sc-pbLEF.Hmwve').text:
+
+
 
 
         # Add one month to the calendar if we're not looking at the correct one
@@ -275,9 +290,14 @@ class Automate_reservation:
 
         try:
             # This is the path to the button to reserve
+            # WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
+            #                 (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-pQGev.efemFX'))
+            #                                 ).click()
+
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                            (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-pQGev.efemFX'))
+                            (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-psPGq.ghfLRH'))
                                             ).click()
+
 
 
             slot_found = True
@@ -297,11 +317,17 @@ class Automate_reservation:
         submit.
         """
 
-        # Click on "Review my reservations" button once it's clickable.
+        # Click on "Continue to Confirm" button once it's clickable.
         try:
+            # WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
+            #             (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-oULiq.cGTYJk')
+            #                                                         )).click()
+
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-                        (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-oULiq.cGTYJk')
+                        (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-qYusL.bBJJMI')
                                                                     )).click()
+
+
 
 
 
@@ -315,6 +341,7 @@ class Automate_reservation:
                 browser.find_element_by_class_name('sc-AxheI.kalRZb').click()
                 # browser.find_element_by_class_name('sc-AxjAm.jxPclZ').click()
                 print('Booked the desired slot, for date:', self.date)
+                time.sleep(1)
 
             return True
 
@@ -322,7 +349,7 @@ class Automate_reservation:
             raise Exception("Ran into an issue booking the slot", ex)
 
 for booking_number in credentials.booking:
-    schedule.every(10).seconds.do(
+    schedule.every().minute.do(
                 Automate_reservation(credentials.booking[booking_number]).main,
                 test_mode=False
                               )
