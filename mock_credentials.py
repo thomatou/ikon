@@ -14,7 +14,7 @@ booking =   {
 'resort' : 'Crystal Mountain Resort',
 }
 ,
-0: {
+1: {
 'month': 12,
 'day' : 21,
 'email' : 'another_email',
