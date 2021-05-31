@@ -1,3 +1,6 @@
+# UPDATE: 
+The ski season is now over, so this script sadly no longer serves a purpose. Left up for reference in the event that someone needs to build a bot that automates reservations!  
+
 # Automating reservations for Ikon-operated ski resorts.
 
 Because of the ongoing pandemic, most ski resorts are now requiring reservations to manage crowds. Ikon-owned and operated ski hills have their weekend days fully booked up months in advance, leaving weekend warriors with two options: hitting refresh every minute in the hope of snagging an elusive spot as a result of cancellations, or using this script to do the work for them.
