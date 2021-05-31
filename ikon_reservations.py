@@ -106,8 +106,6 @@ class Automate_reservation:
             print("Going to quit this browser because of exception:", ex)
             time.sleep(5)
 
-        # Need to check if memory allocated to variables that go out of scope
-        # are automatically cleaned up in Python
         try:
             browser.quit()
         except Exception:
@@ -123,10 +121,10 @@ class Automate_reservation:
 
         chrome_options = Options()
 
-        # if not test_mode:
-        #     chrome_options.add_argument("--headless")
-            # chrome_options.add_argument("--allow-insecure-localhost")
-        # chrome_options.add_argument('--no-startup-window')
+        if not test_mode:
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--allow-insecure-localhost")
+            chrome_options.add_argument('--no-startup-window')
 
         browser = webdriver.Chrome(executable_path='./chromedriver', options=chrome_options)
 
@@ -198,18 +196,11 @@ class Automate_reservation:
                     )
 
         # Wait until page is loaded fully and then click on the box
-        # WebDriverWait(browser, 3).until(EC.presence_of_element_located(
-                                    # (By.CLASS_NAME, 'sc-plWPA.gXobFM'))).click()
         WebDriverWait(browser, 3).until(EC.presence_of_element_located(
                                     (By.CLASS_NAME, 'sc-pLvcq.jvrmaG'))).click()
 
 
         # Now that the box is activated, input the name of the resort
-
-#         browser.find_element_by_class_name(
-# 'sc-ptSRZ.ljHKQc.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused'
-#                             ).send_keys(self.resort)
-
         browser.find_element_by_class_name(
         'sc-pTUKB.kQoWQL.react-autosuggest__input.react-autosuggest__input--open.react-autosuggest__input--focused'
                                     ).send_keys(self.resort)
@@ -226,17 +217,7 @@ class Automate_reservation:
         'react-autosuggest__suggestion.react-autosuggest__suggestion--first'
                                         ).click()
 
-        # Uncomment the next 3 lines if self.resort is not a favourite (and
-        # comment out the one above)
-
-        # browser.find_element_by_xpath(
-        # '//*[@id="react-autowhatever-resort-picker-section-0-item-0"]'
-                                    # ).click()
-
         # Click continue to get to the calendar
-        # browser.find_element_by_class_name(
-        #                             'sc-AxheI.kalRZb.sc-oTbNR.jvzKsL'
-        #                                     ).click()
         browser.find_element_by_class_name(
                                     'sc-AxheI.kalRZb.sc-qYgnM.fbVBUC'
                                             ).click()
@@ -256,11 +237,7 @@ class Automate_reservation:
         # Check what month we are currently looking at
         counter = 0
 
-        # while month_year != browser.find_element_by_class_name('sc-pAXsk.xfqye').text:
         while month_year != browser.find_element_by_class_name('sc-pbLEF.Hmwve').text:
-
-
-
 
         # Add one month to the calendar if we're not looking at the correct one
             browser.find_element_by_class_name(
@@ -290,10 +267,6 @@ class Automate_reservation:
 
         try:
             # This is the path to the button to reserve
-            # WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-            #                 (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-pQGev.efemFX'))
-            #                                 ).click()
-
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
                             (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-psPGq.ghfLRH'))
                                             ).click()
@@ -319,9 +292,6 @@ class Automate_reservation:
 
         # Click on "Continue to Confirm" button once it's clickable.
         try:
-            # WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
-            #             (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-oULiq.cGTYJk')
-            #                                                         )).click()
 
             WebDriverWait(browser, 3).until(EC.element_to_be_clickable(
                         (By.CLASS_NAME, 'sc-AxheI.kalRZb.sc-qYusL.bBJJMI')
