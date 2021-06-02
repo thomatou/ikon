@@ -1,10 +1,3 @@
-# type('month'): int
-# type('day'): int
-# type('email'): string
-# type('password'): string
-
-
-
 booking =   {
 0: {
 'month': 12,

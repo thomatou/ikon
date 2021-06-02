@@ -15,11 +15,8 @@ import send_emails
 local_tz = timezone('America/Los_Angeles')
 
 class correct_redirect_url(object):
-  """An expectation for checking that the redirect url is the expected one
+  """An expectation for checking that the redirect url is the expected one."""
 
-  locator - used to find the element
-  returns the WebElement once it has the particular css class
-  """
   def __init__(self, redirect_url):
     self.expected_redirect_url = redirect_url
 
